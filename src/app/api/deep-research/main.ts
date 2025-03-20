@@ -53,14 +53,19 @@ if((analysis as any).sufficient){
 
     console.log("We are outside of the loop with total iterations: ", iteration)
 
-    const report = await generateReport(researchState, activityTracker);
-
-    dataStream.writeData({
-        type: "report",
-        content: report
-    })
-
-    // console.log("REPORT: ", report)
+    const reportResult = await generateReport(researchState, activityTracker);
+    
+    if (typeof reportResult === 'string') {
+        dataStream.writeData({
+            type: "report",
+            content: reportResult
+        });
+    } else {
+        dataStream.writeData({
+            type: "report",
+            content: (reportResult as any).report || "Error generating report"
+        });
+    }
 
     return initialQueries;
 
