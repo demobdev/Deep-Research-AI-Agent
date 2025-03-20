@@ -9,10 +9,7 @@ import { z } from "zod";
 import {
   ANALYSIS_SYSTEM_PROMPT,
   EXTRACTION_SYSTEM_PROMPT,
-  getAnalysisPrompt,
-  getExtractionPrompt,
   getPlanningPrompt,
-  getReportPrompt,
   PLANNING_SYSTEM_PROMPT,
   REPORT_SYSTEM_PROMPT,
 } from "./prompts";
@@ -183,7 +180,6 @@ export async function analyzeFindings(
 ) {
   try {
     activityTracker.add("analyze","pending",`Analyzing research findings (iteration ${currentIteration}) of ${MAX_ITERATIONS}`);
-    const contentText = combineFindings(researchState.findings);
 
     const result = await callModel({
       model: MODELS.ANALYSIS,
@@ -216,8 +212,6 @@ export async function analyzeFindings(
 export async function generateReport(researchState: ResearchState, activityTracker: ActivityTracker) {
   try {
     activityTracker.add("generate","pending",`Geneating comprehensive report!`);
-
-    const contentText = combineFindings(researchState.findings);
 
     const result = await callModel({
       model: MODELS.REPORT,
