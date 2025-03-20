@@ -19,8 +19,19 @@ type CodeProps = ComponentPropsWithRef<"code"> & {
 const ResearchReport = () => {
   const { report, isCompleted, isLoading, topic } = useDeepResearchStore();
 
+  const getReportContent = () => {
+    if (!report) return "";
+    try {
+      const reportMatch = report.match(/<report>(.*?)<\/report>/);
+      return reportMatch ? reportMatch[1] : report;
+    } catch (error) {
+      console.error("Error parsing report:", error);
+      return report;
+    }
+  };
+
   const handleMarkdownDownload = () => {
-    const content = report.split("<report>")[1].split("</report>")[0];
+    const content = getReportContent();
     const blob = new Blob([content], { type: "text/markdown" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -34,7 +45,7 @@ const ResearchReport = () => {
 
   if (!isCompleted) return null;
 
-  if (report.length <= 0 && isLoading) {
+  if (!report && isLoading) {
     return (
       <Card className="p-4 max-w-[50vw] bg-white/60 border px-4 py-2 rounded-xl">
         <div className="flex flex-col items-center justify-center space-y-4 p-8">
@@ -47,7 +58,7 @@ const ResearchReport = () => {
     );
   }
 
-  if (report.length <= 0) return null;
+  if (!report) return null;
 
   return (
     <Card
@@ -92,7 +103,7 @@ const ResearchReport = () => {
             },
           }}
         >
-          {report.split("<report>")[1].split("</report>")[0]}
+          {getReportContent()}
         </Markdown>
       </div>
     </Card>
