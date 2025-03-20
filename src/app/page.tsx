@@ -13,7 +13,7 @@ export default function Home() {
 
         <div className="flex flex-col items-center gap-4">
         <h1 className="text-5xl sm:text-8xl font-bold font-dancing-script italic bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
-          Deep Research
+          Demo's Deep Research
         </h1>
         <p className="text-gray-600 text-center max-w-[90vw] sm:max-w-[50vw]">
           Enter a topic and answer a few questions to generate a comprehensive research report.
