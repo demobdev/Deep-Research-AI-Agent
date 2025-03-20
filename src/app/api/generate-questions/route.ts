@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { generateObject } from 'ai';
+import { generateObject, LanguageModelV1 } from 'ai';
 import { createGroq } from '@ai-sdk/groq';
 import { z } from "zod";
 
@@ -26,7 +26,7 @@ const clarifyResearchGoals = async (topic: string) => {
 
     try {
         const { object } = await generateObject({
-            model: groq("mixtral-8x7b-32768"),
+            model: groq("mixtral-8x7b-32768") as unknown as LanguageModelV1,
             prompt,
             schema: z.object({
                 questions: z.array(z.string())
