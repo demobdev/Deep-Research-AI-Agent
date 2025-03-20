@@ -9,7 +9,10 @@ import { z } from "zod";
 import {
   ANALYSIS_SYSTEM_PROMPT,
   EXTRACTION_SYSTEM_PROMPT,
+  getAnalysisPrompt,
+  getExtractionPrompt,
   getPlanningPrompt,
+  getReportPrompt,
   PLANNING_SYSTEM_PROMPT,
   REPORT_SYSTEM_PROMPT,
 } from "./prompts";
@@ -114,32 +117,31 @@ export async function extractContent(
   researchState: ResearchState,
   activityTracker: ActivityTracker
 ) {
+  try {
+    activityTracker.add("extract","pending",`Extracting content from ${url}`);
 
-    try{
-        activityTracker.add("extract","pending",`Extracting content from ${url}`);
-
-        const result = await callModel({
-          model: MODELS.EXTRACTION,
-          prompt: `Extract key information from the following content:\n${content}`,
-          system: EXTRACTION_SYSTEM_PROMPT,
-          schema: z.object({
-            summary: z.string().describe("A concise summary of the key information"),
-            keyPoints: z.array(z.string()).describe("Key points extracted from the content"),
-          }),
-          activityType: "extract",
-          researchState,
-          activityTracker
-        });
-      
-        activityTracker.add("extract","complete",`Extracted content from ${url}`);
-      
-        return {
-          url,
-          summary: (result as any).summary,
-        };
-    }catch(error){
-        return handleError(error, `Content extraction from ${url}`, activityTracker, "extract", null) || null
-    }
+    const result = await callModel({
+      model: MODELS.EXTRACTION,
+      prompt: getExtractionPrompt(content, researchState.topic, researchState.clerificationsText),
+      system: EXTRACTION_SYSTEM_PROMPT,
+      schema: z.object({
+        summary: z.string().describe("A concise summary of the key information"),
+        keyPoints: z.array(z.string()).describe("Key points extracted from the content"),
+      }),
+      activityType: "extract",
+      researchState,
+      activityTracker
+    });
+  
+    activityTracker.add("extract","complete",`Extracted content from ${url}`);
+  
+    return {
+      url,
+      summary: (result as any).summary,
+    };
+  } catch(error) {
+    return handleError(error, `Content extraction from ${url}`, activityTracker, "extract", null) || null
+  }
 }
 
 export async function processSearchResults(
@@ -181,9 +183,18 @@ export async function analyzeFindings(
   try {
     activityTracker.add("analyze","pending",`Analyzing research findings (iteration ${currentIteration}) of ${MAX_ITERATIONS}`);
 
+    const contentText = researchState.findings.map(f => f.summary).join("\n\n");
     const result = await callModel({
       model: MODELS.ANALYSIS,
-      prompt: `Analyze the following findings:\n${JSON.stringify(researchState.findings, null, 2)}`,
+      prompt: getAnalysisPrompt(
+        contentText,
+        researchState.topic,
+        researchState.clerificationsText,
+        currentQueries,
+        currentIteration,
+        MAX_ITERATIONS,
+        contentText.length
+      ),
       system: ANALYSIS_SYSTEM_PROMPT,
       schema: z.object({
         sufficient: z.boolean().describe("Whether the collected content is sufficient for a useful report"),
@@ -203,7 +214,7 @@ export async function analyzeFindings(
   } catch (error) {
     return handleError(error, `Content analysis`, activityTracker, "analyze", {
         sufficient: false,
-        gaps: ["Unable to analyz content"],
+        gaps: ["Unable to analyze content"],
         queries: ["Please try a different search query"]
     })
   }
@@ -211,11 +222,12 @@ export async function analyzeFindings(
 
 export async function generateReport(researchState: ResearchState, activityTracker: ActivityTracker) {
   try {
-    activityTracker.add("generate","pending",`Geneating comprehensive report!`);
+    activityTracker.add("generate","pending",`Generating comprehensive report!`);
 
+    const contentText = researchState.findings.map(f => f.summary).join("\n\n");
     const result = await callModel({
       model: MODELS.REPORT,
-      prompt: `Generate a comprehensive report based on the following research:\n${JSON.stringify(researchState.findings, null, 2)}`,
+      prompt: getReportPrompt(contentText, researchState.topic, researchState.clerificationsText),
       system: REPORT_SYSTEM_PROMPT,
       schema: z.object({
         report: z.string().describe("The comprehensive research report"),
