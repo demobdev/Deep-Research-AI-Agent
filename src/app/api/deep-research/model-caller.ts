@@ -1,4 +1,5 @@
-import { generateObject, generateText } from "ai";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { generateObject, generateText, LanguageModelV1 } from "ai";
 import { createGroq } from "@ai-sdk/groq";
 import { ActivityTracker, ModelCallOptions, ResearchState } from "./types";
 import { MAX_RETRY_ATTEMPTS, RETRY_DELAY_MS } from "./constants";
@@ -27,7 +28,7 @@ export async function callModel<T>({
         try {
             if (schema) {
                 const { object, usage } = await generateObject({
-                    model: groq(model) as unknown as any,
+                    model: groq(model) as unknown as LanguageModelV1,
                     prompt,
                     system,
                     schema
@@ -41,7 +42,7 @@ export async function callModel<T>({
                 return object;
             } else {
                 const { text, usage } = await generateText({
-                    model: groq(model) as unknown as any,
+                    model: groq(model) as unknown as LanguageModelV1,
                     prompt,
                     system,
                 });
@@ -82,7 +83,7 @@ export async function generateTextWithModel(
     while (attempts < MAX_RETRY_ATTEMPTS) {
         try {
             const { text, usage } = await generateText({
-                model: groq(model) as unknown as any,
+                model: groq(model) as unknown as LanguageModelV1,
                 prompt,
                 system,
                 ...options,
