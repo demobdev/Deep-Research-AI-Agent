@@ -15,7 +15,7 @@ import {
 } from "./prompts";
 import { callModel } from "./model-caller";
 import { exa } from "./services";
-import { combineFindings, handleError } from "./utils";
+import { handleError } from "./utils";
 import {
   MAX_CONTENT_CHARS,
   MAX_ITERATIONS,
